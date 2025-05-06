@@ -106,7 +106,7 @@ export default {
             bookName: record.bookname,
             lendDate: record.lendTime,
             returnDate: record.returnTime,
-            status: record.status === 1 ? '借阅中已归还' : '已归还'
+            status: +record.status === 1 ? '已归还' : '借阅中'
           }))
         }
       })

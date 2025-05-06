@@ -153,10 +153,78 @@ INSERT INTO `lend_record` VALUES (16, '12341541321', '十万个为什么', '2022
 INSERT INTO `lend_record` VALUES (16, '12341541321', '十万个为什么', '2022-04-18 16:44:14', '2022-04-18 16:44:18', '1', 7);
 
 -- ----------------------------
--- Records of violation
+-- Records of violation 违章记录id 用户id 图书id 图书名 违章类型 归还时间 罚款金额 处理状态 备注
 -- ----------------------------
-INSERT INTO `violation` VALUES (1, 13, 9, '十万个为什么', '逾期未还', '2021-12-18 11:10:20', 10.00, '已处理', '逾期3天');
-INSERT INTO `violation` VALUES (2, 14, 12, '操作系统', '图书损坏', '2021-12-22 17:30:48', 50.00, '未处理', '封面损坏');
+INSERT INTO `violation` VALUES (1, 18, 9, '十万个为什么', '逾期未还', '2024-12-18 11:10:20', 10.00, '已处理', '逾期3天');
+INSERT INTO `violation` VALUES (2, 14, 12, '操作系统', '图书损坏', '2025-1-22 17:30:48', 50.00, '未处理', '封面损坏');
+
+-- ----------------------------
+-- Table structure for category
+-- ----------------------------
+DROP TABLE IF EXISTS `category`;
+CREATE TABLE `category` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(50) NOT NULL COMMENT '分类名称',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='图书分类表';
+
+-- ----------------------------
+-- Records of category
+-- ----------------------------
+INSERT INTO `category` (`name`, `create_time`) VALUES 
+('文学', '2023-01-21 00:00:00'),
+('科技', '2023-02-21 00:00:00'),
+('历史', '2023-03-21 00:00:00'),
+('艺术', '2023-04-21 00:00:00'),
+('计算机', '2023-05-21 00:00:00'),
+('经济', '2023-06-21 00:00:00'),
+('哲学', '2023-07-21 00:00:00'),
+('教育', '2023-08-21 00:00:00'),
+('医学', '2023-09-21 00:00:00'),
+('法律', '2023-11-21 00:00:00');
+
+
+
+-- ----------------------------
+-- Table structure for announcement
+-- ----------------------------
+DROP TABLE IF EXISTS `announcement`;
+CREATE TABLE `announcement` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `title` VARCHAR(100) NOT NULL COMMENT '公告标题',
+  `content` TEXT NOT NULL COMMENT '公告内容',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='公告表';
+
+-- ----------------------------
+-- Records of announcement
+-- ----------------------------
+INSERT INTO `announcement` (`title`, `content`, `create_time`) VALUES 
+('系统维护通知', '系统将于今晚进行维护', '2025-04-12 00:00:00'),
+('假期安排', '五一假期图书馆开放时间调整', '2025-04-28 00:00:00');
+
+-- ----------------------------
+-- Table structure for policy
+-- ----------------------------
+DROP TABLE IF EXISTS `policy`;
+CREATE TABLE `policy` (
+  `id` INT AUTO_INCREMENT PRIMARY KEY,
+  `name` VARCHAR(100) NOT NULL COMMENT '政策名称',
+  `borrow_days` INT NOT NULL COMMENT '可借阅天数',
+  `renew_days` INT NOT NULL COMMENT '可续借天数',
+  `max_renew_times` INT NOT NULL COMMENT '最大续借次数',
+  `fine_per_day` DECIMAL(10,2) NOT NULL COMMENT '每日罚金(元)',
+  `create_time` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间'
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='借阅政策表';
+
+-- ----------------------------
+-- Records of policy (初始默认政策)
+-- ----------------------------
+INSERT INTO `policy` (`name`, `borrow_days`, `renew_days`, `max_renew_times`, `fine_per_day`) VALUES 
+('标准政策', 30, 15, 1, 0.50),
+('学生政策', 60, 30, 2, 0.20),
+('教师政策', 90, 30, 3, 0.10);
 
 -- ----------------------------
 -- Table structure for user

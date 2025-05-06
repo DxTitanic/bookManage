@@ -57,6 +57,16 @@ const routes = [
         path: 'violation',
         name: 'Violation',
         component: () => import("@/views/Violation")
+      },
+      {
+        path: 'category',
+        name: 'Category',
+        component: () => import("@/views/Category")
+      },
+      {
+        path: 'policy',
+        name: 'Policy',
+        component: () => import("@/views/Policy")
       }
     ]
   },

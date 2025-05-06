@@ -19,7 +19,7 @@
         <el-icon><HomeFilled /></el-icon>
       </template>
       <span v-if="user.role == '1'">展示板</span>
-      <span else style="margin-top: 18px;">首页</span>
+      <span v-else style="margin-top: 18px;">首页</span>
     </el-menu-item>
     <el-sub-menu index="2" text-color="#fff">
       <template #title>
@@ -34,12 +34,12 @@
         </svg>
         <span>修改个人信息</span>
       </el-menu-item>
-      <el-menu-item index="/password">
+      <!-- <el-menu-item index="/password">
         <svg class="icon" aria-hidden="true">
           <use xlink:href="#icon-mima "></use>
         </svg>
         <span>修改密码</span>
-      </el-menu-item>
+      </el-menu-item> -->
     </el-sub-menu>
     <el-menu-item index="/user" v-if="user.role == 1">
       <svg class="icon" aria-hidden="true">
@@ -71,7 +71,7 @@
       </svg>
       <span>借阅信息</span>
     </el-menu-item>
-    <el-menu-item index="/bookwithuser" >
+    <el-menu-item index="/bookwithuser" v-if="user.role == 1">
       <el-icon><grid /></el-icon>
       <span>借阅状态</span>
     </el-menu-item>
@@ -81,9 +81,17 @@
       </svg>
       <span>公告通知</span>
     </el-menu-item>
-    <el-menu-item index="/violation" v-if="user.role == 2">
+    <el-menu-item index="/violation" v-if="user.role == 1 || user.role == 2">
       <el-icon><Failed /></el-icon>
-      <span>违章信息</span>
+      <span style="margin-top: 15px;">违章信息</span>
+    </el-menu-item>
+    <el-menu-item index="/category" v-if="user.role == 1">
+      <el-icon><Discount /></el-icon>
+      <span style="margin-top: 15px;">分类信息维护</span>
+    </el-menu-item>
+    <el-menu-item index="/policy" v-if="user.role == 1">
+      <el-icon><Document /></el-icon>
+      <span style="margin-top: 15px;">借阅政策管理</span>
     </el-menu-item>
   </el-menu>
 
@@ -99,7 +107,9 @@ export default {
   name: "Aside",
   components: {
     HomeFilled: defineAsyncComponent(() => import('@element-plus/icons-vue').then(mod => mod.HomeFilled)),
-    Failed: defineAsyncComponent(() => import('@element-plus/icons-vue').then(mod => mod.Failed))
+    Failed: defineAsyncComponent(() => import('@element-plus/icons-vue').then(mod => mod.Failed)),
+    Discount: defineAsyncComponent(() => import('@element-plus/icons-vue').then(mod => mod.Discount)),
+    Document: defineAsyncComponent(() => import('@element-plus/icons-vue').then(mod => mod.Document))
   },
   created(){
     let userStr = sessionStorage.getItem("user") ||"{}"

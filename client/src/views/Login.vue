@@ -70,6 +70,8 @@ export default {
               if (res.data.role == this.form.role) {
                 ElMessage.success("登录成功")
                 sessionStorage.setItem("user",JSON.stringify(res.data))
+                // 设置管理员状态
+                this.$store.commit('announcement/SET_ADMIN', +res.data.role === 1)
                 // /dashboard 图表展示页面，管理员用户页面
                 if (res.data.role === 1) {
                   this.$router.push("/dashboard")

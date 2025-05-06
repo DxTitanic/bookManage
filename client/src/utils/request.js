@@ -1,5 +1,6 @@
 import axios from 'axios'
 import router from "../router";
+import { mockData } from '../api/violation';
 
 const request = axios.create({
     baseURL: '/api',
@@ -13,12 +14,12 @@ request.interceptors.request.use(config => {
     config.headers['Content-Type'] = 'application/json;charset=utf-8';
 
     // config.headers['token'] = user.token;  // 设置请求头
-    //取出sessionStorage里面缓存的用户信息
+    // 取出sessionStorage里面缓存的用户信息
     let userJson = sessionStorage.getItem("user")
     if(!userJson)
-    {
-        router.push("/login")
-    }
+        {
+            router.push("/login")
+        }
     return config
 }, error => {
     return Promise.reject(error)
@@ -45,6 +46,23 @@ request.interceptors.response.use(
     }
 )
 
+// 添加具体请求方法
+export function fetchViolationRecords(params) {
+    // 开发环境下使用mock数据
+    if (process.env.NODE_ENV === 'development') {
+        return Promise.resolve({
+            data: mockData.violationData, // 返回正确的数据结构
+            status: 200,
+            statusText: 'OK'
+        });
+    }
+    
+    return request({
+        url: '/violation/records',
+        method: 'get',
+        params
+    })
+}
 
 export default request
 

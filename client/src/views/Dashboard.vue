@@ -14,8 +14,19 @@
       </el-col>
     </el-row>
     <div id="myTimer" style="margin-left: 15px;font-weight: 550;"></div>
-    <!-- 为 ECharts 准备一个具备大小（宽高）的 DOM -->
-    <div id="main" style="margin-left: 5px"></div>
+    <!-- 左右排列的两个图表 -->
+    <el-row :gutter="20" style="margin-top: 20px">
+      <el-col :span="12">
+        <el-card>
+          <div id="main" style="width: 100%; height: 450px"></div>
+        </el-card>
+      </el-col>
+      <el-col :span="12">
+        <el-card>
+          <div id="returnChart" style="width: 100%; height: 450px"></div>
+        </el-card>
+      </el-col>
+    </el-row>
   </div>
 </template>
 
@@ -45,22 +56,18 @@ export default {
     request.get("/dashboard").then(res=>{
       if(res.code == 0)
       {
-
         this.cards[0].data = res.data.lendRecordCount
         this.cards[1].data = res.data.visitCount
         this.cards[2].data = res.data.bookCount
         this.cards[3].data = res.data.userCount
-
       }
       else
       {
         ElMessage.error(res.msg)
       }
 
-
-      // 基于准备好的dom，初始化echarts实例
+      // 初始化统计图表
       var myChart = echarts.init(document.getElementById('main'))
-    console.log(this.cards[0].data)
       // 绘制图表
       myChart.setOption({
         title: {
@@ -114,8 +121,56 @@ export default {
           }
         ]
       })
-      window.addEventListener('resize', () => {
-        myChart.resize()
+
+    // 初始化归还和逾期图表(写死数据)
+      var returnChart = echarts.init(document.getElementById('returnChart'))
+      returnChart.setOption({
+        title: {
+          text: '归还与逾期统计'
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        legend: {
+          data: ['归还数量', '逾期数量']
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+        xAxis: {
+          type: 'category',
+          data: ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            name: '归还数量',
+            type: 'bar',
+            data: [120, 132, 101, 134, 90, 230, 210],
+            itemStyle: { color: '#67C23A' }
+          },
+          {
+            name: '逾期数量',
+            type: 'bar',
+            data: [2, 1, 2, 3, 6, 0, 5],
+            itemStyle: { color: '#F56C6C' }
+          }
+        ]
+      })
+
+      // 响应式调整
+      const handleResize = () => {
+        myChart && myChart.resize()
+        returnChart && returnChart.resize()
+      }
+      window.addEventListener('resize', handleResize)
+      this.$once('hook:beforeDestroy', () => {
+        window.removeEventListener('resize', handleResize)
       })
     })
   },

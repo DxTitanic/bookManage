@@ -14,7 +14,7 @@
             <template #prefix><el-icon class="el-input__icon"><search /></el-icon></template>
           </el-input>
         </el-form-item >
-        <el-form-item label="读者编号" >
+        <el-form-item label="读者编号" v-if="+user.role === 1">
           <el-input v-model="search3" placeholder="请输入读者编号"  clearable>
             <template #prefix><el-icon class="el-input__icon"><search /></el-icon></template>
           </el-input>
@@ -29,7 +29,7 @@
     </div>
 
 <!--按钮-->
-    <div style="margin: 10px 0;" v-if="user.role == 1">
+    <div style="margin: 10px 0;" v-if="+user.role === 1">
       <el-popconfirm title="确认删除?" @confirm="deleteBatch" >
         <template #reference>
           <el-button type="danger" size="mini" >批量删除</el-button>
@@ -39,13 +39,13 @@
     <!-- 数据字段-->
 
     <el-table :data="tableData" stripe border="true" @selection-change="handleSelectionChange">
-      <el-table-column v-if="user.role ==1"
+      <el-table-column v-if="+user.role === 1"
                        type="selection"
                        width="55">
       </el-table-column>
       <el-table-column prop="isbn" label="图书编号" sortable />
       <el-table-column prop="bookname" label="图书名称" />
-      <el-table-column prop="readerId" label="读者编号" sortable/>
+      <el-table-column v-if="+user.role === 1" prop="readerId" label="读者编号" sortable/>
       <el-table-column prop="lendTime" label="借阅时间" sortable/>
       <el-table-column prop="returnTime" label="归还时间" sortable/>
       <el-table-column prop="status" label="状态" >
@@ -54,7 +54,7 @@
           <el-tag v-else type="success">已归还</el-tag>
         </template>
       </el-table-column>
-      <el-table-column v-if="user.role === 1" label="操作" width="230px">
+      <el-table-column v-if="+user.role === 1" label="操作" width="230px">
         <template v-slot="scope">
           <el-button  size="mini" @click ="handleEdit(scope.row)">编辑</el-button>
           <el-popconfirm title="确认删除?" @confirm="handleDelete(scope.row)">
@@ -65,6 +65,31 @@
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 管理员专属：违规记录 -->
+    <el-card v-if="+user.role === 1 && violationData.length > 0 && violationData.length <= 10" style="margin-top: 20px">
+      <template #header>
+        <div class="card-header">
+          <span>违规记录(最近10条)</span>
+          <el-button v-if="violationData.length === 10" type="text" @click="$router.push('/violation')">
+            查看全部 &gt;
+          </el-button>
+        </div>
+      </template>
+      <el-table :data="violationData" stripe border>
+        <el-table-column prop="userId" label="读者编号" />
+        <el-table-column prop="bookName" label="图书名称" />
+        <el-table-column prop="violationType" label="违规类型" />
+        <el-table-column prop="violationDate" label="违规时间" />
+        <el-table-column prop="fineAmount" label="罚款金额" />
+        <el-table-column prop="status" label="处理状态">
+          <template v-slot="scope">
+            <el-tag v-if="scope.row.status === '已处理'" type="success">已处理</el-tag>
+            <el-tag v-else type="danger">未处理</el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
     <!--    分页-->
     <div style="margin: 10px 0">
@@ -125,46 +150,54 @@ import { defineComponent, reactive, toRefs } from 'vue'
 
 export default defineComponent({
 
-  created(){
-    this.load()
-    let userStr = sessionStorage.getItem("user") ||"{}"
-    this.user = JSON.parse(userStr)
-  },
-  name: 'LendRecord',
-  methods: {
-    handleSelectionChange(val){
-      this.forms = val
-    },
-    deleteBatch(){
-      if(!this.forms.length){
-        ElMessage.warning("请选择数据！")
-        return
-      }
-      request.post("/LendRecord/deleteRecords",this.forms).then(res =>{
-        if(res.code === '0'){
-          ElMessage.success("批量删除成功")
-          this.load()
+    created(){
+        let userStr = sessionStorage.getItem("user") ||"{}"
+        this.user = JSON.parse(userStr)
+        this.load()
+        if (+this.user.role === 1) {
+          this.loadViolations()
         }
-        else {
-          ElMessage.error(res.msg)
-        }
-      })
     },
-    load(){
-      request.get("/LendRecord",{
-        params:{
-          pageNum: this.currentPage,
-          pageSize: this.pageSize,
-          search1: this.search1,
-          search2: this.search2,
-          search3: this.search3
-        }
-      }).then(res =>{
-        console.log(res)
-        this.tableData = res.data.records
-        this.total = res.data.total
-      })
-    },
+    name: 'LendRecord',
+    methods: {
+        handleSelectionChange(val){
+            this.forms = val
+        },
+        deleteBatch(){
+            if(!this.forms.length){
+                ElMessage.warning("请选择数据！")
+                return
+            }
+            request.post("/LendRecord/deleteRecords",this.forms).then(res =>{
+                if(res.code === '0'){
+                ElMessage.success("批量删除成功")
+                this.load()
+                }
+                else {
+                ElMessage.error(res.msg)
+                }
+            })
+        },
+        load(){
+            let params = {
+                pageNum: this.currentPage,
+                pageSize: this.pageSize,
+                search1: this.search1,
+                search2: this.search2,
+                search3: this.search3
+            }
+
+            // 如果是普通用户，只查询自己的记录
+            if(this.user && +this.user.role === 2) {
+                params.search3 = this.user.id
+            }
+            
+            request.get("/LendRecord",{ params }).then(res =>{
+                console.log(res)
+                this.tableData = res.data.records
+                this.total = res.data.total
+            })
+        },
     save(isbn){
       //ES6语法
       //地址,但是？IP与端口？+请求参数
@@ -203,74 +236,90 @@ export default defineComponent({
       }
 
     },
-    clear(){
-      this.search1 = ""
-      this.search2 = ""
-      this.search3 = ""
-      this.load()
-    },
-    handleEdit(row){
-      this.form = JSON.parse(JSON.stringify(row))
-      this.dialogVisible = true
-    },
-    handleSizeChange(pageSize){
-      this.pageSize = pageSize
-      this.load()
-    },
-    handleCurrentChange(pageNum){
-      this.pageNum = pageNum
-      this.load()
-    },
-    handleDelete(row){
-      const form3 = JSON.parse(JSON.stringify(row))
-      request.post("LendRecord/deleteRecord",form3).then(res =>{
-        console.log(res)
-        if(res.code == 0 ){
-          ElMessage.success("删除成功")
-        }
-        else
-          ElMessage.error(res.msg)
+        clear(){
+        this.search1 = ""
+        this.search2 = ""
+        this.search3 = ""
         this.load()
-      })
+        },
+        handleEdit(row){
+        this.form = JSON.parse(JSON.stringify(row))
+        this.dialogVisible = true
+        },
+        handleSizeChange(pageSize){
+        this.pageSize = pageSize
+        this.load()
+        },
+        handleCurrentChange(pageNum){
+        this.pageNum = pageNum
+        this.load()
+        },
+        handleDelete(row){
+        const form3 = JSON.parse(JSON.stringify(row))
+        request.post("LendRecord/deleteRecord",form3).then(res =>{
+            console.log(res)
+            if(res.code == 0 ){
+            ElMessage.success("删除成功")
+            }
+            else
+            ElMessage.error(res.msg)
+            this.load()
+        })
+        },
+        add(){
+            this.dialogVisible2 = true
+            this.form ={}
+        },
+        loadViolations() {
+          request.get("/violation", {
+            params: {
+              pageNum: 1,
+              pageSize: 10
+            }
+          }).then(res => {
+            if (res.code === '0') {
+              this.violationData = res.data?.records || []
+              // 如果违规记录超过10条，跳转到Violation页面
+              if (res.data?.total > 10) {
+                this.$router.push('/violation')
+              }
+            }
+          })
+        }
     },
-    add(){
-      this.dialogVisible2 = true
-      this.form ={}
-    }
-  },
 
-  setup() {
-    const state = reactive({
-      shortcuts: [
-        {
-          text: 'Today',
-          value: new Date(),
-        },
-        {
-          text: 'Yesterday',
-          value: () => {
-            const date = new Date()
-            date.setTime(date.getTime() - 3600 * 1000 * 24)
-            return date
-          },
-        },
-        {
-          text: 'A week ago',
-          value: () => {
-            const date = new Date()
-            date.setTime(date.getTime() - 3600 * 1000 * 24 * 7)
-            return date
-          },
-        },
-      ],
-      value1: '',
-      value2: '',
-      value3: '',
-      defaultTime: new Date(2000, 1, 1, 12, 0, 0), // '12:00:00'
-    })
+    setup() {
+        const state = reactive({
+            shortcuts: [
+                {
+                text: 'Today',
+                value: new Date(),
+                },
+                {
+                text: 'Yesterday',
+                value: () => {
+                    const date = new Date()
+                    date.setTime(date.getTime() - 3600 * 1000 * 24)
+                    return date
+                },
+                },
+                {
+                text: 'A week ago',
+                value: () => {
+                    const date = new Date()
+                    date.setTime(date.getTime() - 3600 * 1000 * 24 * 7)
+                    return date
+                },
+                },
+            ],
+            value1: '',
+            value2: '',
+            value3: '',
+            defaultTime: new Date(2000, 1, 1, 12, 0, 0), // '12:00:00'
+        })
 
-    return toRefs(state)
-  },
+        return toRefs(state)
+    },
   data() {
     return {
       form: {},
@@ -281,10 +330,10 @@ export default defineComponent({
       currentPage:1,
       pageSize: 10,
       tableData: [],
+      violationData: [],
       user:{},
       dialogVisible : false,
       dialogVisible2: false
-
     }
   },
 

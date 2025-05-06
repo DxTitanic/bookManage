@@ -41,9 +41,6 @@ public class UserController {
     @PostMapping("/login")
     public Result<?> login(@RequestBody User user){
         User res = userMapper.selectOne(Wrappers.<User>lambdaQuery().eq(User::getUsername,user.getUsername()).eq(User::getPassword,user.getPassword()));
-        if(!res.getRole().equals(user.getRole())) {
-            return Result.error("-1","角色权限不匹配");
-        }
         if(res == null)
         {
             return Result.error("-1","用户名或密码错误");
